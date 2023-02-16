@@ -42,11 +42,18 @@ public class Game {
 	private JTextArea input = new JTextArea();
 	private JLabel timeA;
 	private JLabel accuA;
+	private JLabel eMin;
+	private JLabel mMin;
+	private JLabel hMin;
 	
 	private long timeS;
 	private long timeE;
+	private int attemptTime;
+	private int easyBest;
+	private int mediumBest;
+	private int hardBest;
 	
-	private float accuracy;
+	private double accuracy;
     
     // Boot up the game
 	public Game() {
@@ -481,7 +488,7 @@ public class Game {
 		accuA.setHorizontalAlignment(JLabel.CENTER);
 		accuS.add(accuA);
 		
-		JPanel rightBottom = new JPanel(new GridLayout(0, 1, 12, 24));
+		JPanel rightBottom = new JPanel(new GridLayout(0, 1, 12, 12));
 		rightBottom.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 		rightBottom.setPreferredSize(new Dimension(10, 240));
 		rightBottom.setOpaque(false);
@@ -490,7 +497,7 @@ public class Game {
 		bestT.setFont(new Font("MV Boli", Font.PLAIN, 24));
 		rightBottom.add(bestT, BorderLayout.NORTH);
 		
-		JPanel easyT = new JPanel(new GridLayout(0, 1, 0, 0));
+		JPanel easyT = new JPanel(new GridLayout(0, 1, 0, 8));
 		JPanel mediumT = new JPanel(new GridLayout(0, 1, 0, 8));
 		JPanel hardT = new JPanel(new GridLayout(0, 1, 0, 8));
 		
@@ -501,19 +508,19 @@ public class Game {
 		JLabel label1 = new JLabel("Easy");
 		label1.setFont(fontM);
 		label1.setForeground(Color.WHITE);
-		JLabel eMin = new JLabel("--/--");
+		eMin = new JLabel("--/--");
 		eMin.setFont(fontM);
 		eMin.setForeground(Color.WHITE);
 		JLabel label2 = new JLabel("Medium");
 		label2.setFont(fontM);
 		label2.setForeground(Color.WHITE);
-		JLabel mMin = new JLabel("--/--");
+		mMin = new JLabel("--/--");
 		mMin.setFont(fontM);
 		mMin.setForeground(Color.WHITE);
 		JLabel label3 = new JLabel("Hard");
 		label3.setFont(fontM);
 		label3.setForeground(Color.WHITE);
-		JLabel hMin = new JLabel("--/--");
+		hMin = new JLabel("--/--");
 		hMin.setFont(fontM);
 		hMin.setForeground(Color.WHITE);
 		easyT.add(label1);
@@ -593,6 +600,28 @@ public class Game {
 		bottomCenter.add(resP, BorderLayout.WEST);
 		bottomCenter.add(clrP, BorderLayout.EAST);
 		
+		reset.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				sentence.setText("");
+				input.setText("");
+				input.setEditable(true);
+				input.setFocusable(true);
+				button1.setEnabled(true);
+				button1.setBorder(BorderFactory.createRaisedBevelBorder());
+				button2.setEnabled(true);
+				button2.setBorder(BorderFactory.createRaisedBevelBorder());
+				button3.setEnabled(true);
+				button3.setBorder(BorderFactory.createRaisedBevelBorder());
+				
+				diff = 0;
+				button4.setEnabled(true);
+				
+				timeA.setText("--/--");
+				accuA.setText("--");
+			}
+		});
+		
 		window.setVisible(true);
 	}
 	
@@ -622,8 +651,10 @@ public class Game {
 	}
 	
 	private void displayTime() {
-		long timeTaken = (timeE - timeS) / 1000000000;
-		timeA.setText(Long.toString(timeTaken) + " seconds");
+		int timeTaken = (int) ((timeE - timeS) / 1000000000);
+		attemptTime = timeTaken;
+		timeA.setText(Integer.toString(timeTaken) + " seconds");
+		updateBestTimings();
 	}
 	
 	private void displayAccuracy() {
@@ -636,8 +667,37 @@ public class Game {
 		for(int i = 0; i < minLength; i++)
 			if(acW[i].equals(atW[i]))
 				matching++;
-		accuracy = (matching * 100) / acW.length;
-		accuA.setText(Float.toString(accuracy) + "%");
+		accuracy = (double) (matching * 100.0) / (double) acW.length;
+		accuA.setText(String.format("%.2f", accuracy) + "%");
+	}
+	
+	private void updateBestTimings() {
+		if((int) accuracy == 100) {
+			if(diff == 1) {
+				if(eMin.getText().equals("--/--"))
+					eMin.setText(Integer.toString(attemptTime) + " seconds");
+				else if(attemptTime < easyBest) {
+					easyBest = attemptTime;
+					eMin.setText(Integer.toString(easyBest) + " seconds");
+				}
+			}
+			if(diff == 2) {
+				if(mMin.getText().equals("--/--"))
+					mMin.setText(Integer.toString(attemptTime) + " seconds");
+				else if(attemptTime < mediumBest) {
+					mediumBest = attemptTime;
+					mMin.setText(Integer.toString(mediumBest) + " seconds");
+				}
+			}
+			if(diff == 3) {
+				if(hMin.getText().equals("--/--"))
+					hMin.setText(Integer.toString(attemptTime) + " seconds");
+				else if(attemptTime < hardBest) {
+					hardBest = attemptTime;
+					hMin.setText(Integer.toString(hardBest) + " seconds");
+				}
+			}
+		}
 	}
 	
 	public static void main(String[] args) {
