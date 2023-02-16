@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -16,6 +17,7 @@ import java.util.Scanner;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -25,21 +27,12 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
-import javax.swing.border.BevelBorder;
 
 public class Game {
-	private ArrayList<String> adjectiveList;
-    private ArrayList<String> nounList;
-    private ArrayList<String> colorList;
-    private ArrayList<String> countryList;
-    private ArrayList<String> nameList;
-    private ArrayList<String> animalList;
-    private ArrayList<String> timeList;
-    private ArrayList<String> verbList;
-    private ArrayList<String> fruitList;
+	private HashMap<String, ArrayList<String>> wordLists;
     private ArrayList<String> alreadyUsed = new ArrayList<String>();
     private Random myRandom;
-    private String path = "src/data";
+    private String path = "src"; // To play edit this path only upto src folder
     private String newSent;
     
     private int diff;
@@ -57,150 +50,97 @@ public class Game {
     
     // Boot up the game
 	public Game() {
+		wordLists = new HashMap<>();
 		initializeWords();
 		myRandom = new Random();
 		diff = 0;
 		showInterface();
 	}
 	
-	// Begin the game
-	private void startGame() {
-		int diff = 0;
-		System.out.print("Enter the difficulty : ");
-		Scanner ip = new Scanner(System.in);
-		diff = ip.nextInt();
-		ip.nextLine();
-		for(int i = 3; i >= 1; i--) {
-			System.out.println("Starting in " + i + "..");
-			try {
-			    Thread.sleep(2 * 500);
-			} catch (InterruptedException ie) {
-			    Thread.currentThread().interrupt();
-			}
-		}
-		
-		long timeS = 0, timeE = 0;
-		String sentence = generateSentence(diff);
-		System.out.println(sentence);
-		timeS = System.nanoTime();
-		String userInput = ip.nextLine();
-		// System.out.println(userInput);
-		timeE = System.nanoTime();
-		System.out.println("Time taken : " + (timeE - timeS) / 1000000000 + " seconds.");
-		getScore(sentence, userInput);
-		ip.close();
-	}
+	// For running game on console
+//	private void startGame() {
+//		int diff = 0;
+//		System.out.print("Enter the difficulty : ");
+//		Scanner ip = new Scanner(System.in);
+//		diff = ip.nextInt();
+//		ip.nextLine();
+//		for(int i = 3; i >= 1; i--) {
+//			System.out.println("Starting in " + i + "..");
+//			try {
+//			    Thread.sleep(2 * 500);
+//			} catch (InterruptedException ie) {
+//			    Thread.currentThread().interrupt();
+//			}
+//		}
+//		
+//		long timeS = 0, timeE = 0;
+//		String sentence = generateSentence(diff);
+//		System.out.println(sentence);
+//		timeS = System.nanoTime();
+//		String userInput = ip.nextLine();
+//		// System.out.println(userInput);
+//		timeE = System.nanoTime();
+//		System.out.println("Time taken : " + (timeE - timeS) / 1000000000 + " seconds.");
+//		getScore(sentence, userInput);
+//		ip.close();
+//	}
 	
 	// Get the score of the player
-	private void getScore(String actual, String attempt) {
-		String acW[] = actual.split(" ");
-		String atW[] = attempt.split(" ");
-		int minLength = (acW.length < atW.length) ? acW.length : atW.length;
-		int matching = 0;
-		for(int i = 0; i < minLength; i++)
-			if(acW[i].equals(atW[i]))
-				matching++;
-		float accuracy = (matching * 100) / acW.length;
-		System.out.println("Accuracy : " + accuracy);
-		if(acW.length == atW.length && accuracy == 100.0)
-			System.out.println("Perfect!");
-	}
+//	private void getScore(String actual, String attempt) {
+//		String acW[] = actual.split(" ");
+//		String atW[] = attempt.split(" ");
+//		int minLength = (acW.length < atW.length) ? acW.length : atW.length;
+//		int matching = 0;
+//		for(int i = 0; i < minLength; i++)
+//			if(acW[i].equals(atW[i]))
+//				matching++;
+//		float accuracy = (matching * 100) / acW.length;
+//		System.out.println("Accuracy : " + accuracy);
+//		if(acW.length == atW.length && accuracy == 100.0)
+//			System.out.println("Perfect!");
+//	}
 	
 	// Initialize word lists
 	private void initializeWords() {
-		adjectiveList= readFromFile(path+"/adjective.txt"); 
-        nounList = readFromFile(path+"/noun.txt");
-        colorList = readFromFile(path+"/color.txt");
-        countryList = readFromFile(path+"/country.txt");
-        nameList = readFromFile(path+"/name.txt");      
-        animalList = readFromFile(path+"/animal.txt");
-        timeList = readFromFile(path+"/timeframe.txt");
-        verbList = readFromFile(path+"/verb.txt");
-        fruitList = readFromFile(path+"/fruit.txt");
+		String []catg = {"adjective", "noun", "color", "country", "name", "animal", "timeframe", "verb", "fruit"};
+		for(String c : catg) {
+			ArrayList<String> list = readFromFile(path + "/data/" + c + ".txt");
+			wordLists.put(c, list);
+		}
 	}
 	
 	private ArrayList<String> readFromFile(String path) {
-		ArrayList<String> wordList = new ArrayList<>();
+		ArrayList<String> list = new ArrayList<>();
 		try {
 			File f = new File(path);
 			Scanner read = new Scanner(f);
 			while(read.hasNextLine()) {
 				String word = read.nextLine();
-				wordList.add(word);
+				list.add(word);
 			}
 			read.close();
 		} catch (FileNotFoundException e) {
 			System.out.println("An error occured.");
 			e.printStackTrace();
 		}
-		return wordList;
+		return list;
 	}
 	
 	// Get a random word from the lists
-    private String randomFrom(ArrayList<String> source){
-        int index = myRandom.nextInt(source.size());
-        return source.get(index);
+    private String randomFrom(ArrayList<String> words){
+        int index = myRandom.nextInt(words.size());
+        return words.get(index);
     }	
 
     // Substitute the placeholders in the template
     private String getSubstitute(String label) {
-    	switch(label) {
-    		case "country":
-    			return randomFrom(countryList);
-    		case "color":
-    			return randomFrom(colorList);
-    		case "noun":
-    			return randomFrom(nounList);
-    		case "name":
-    			return randomFrom(nameList);
-    		case "adjective":
-    			return randomFrom(adjectiveList);
-    		case "animal":
-    			return randomFrom(animalList);
-    		case "timeframe":
-    			return randomFrom(timeList);
-    		case "verb":
-    			return randomFrom(verbList);
-    		case "fruit":
-    			return randomFrom(fruitList);
-    		case "number":
+    	if(label == "number")
     			return ""+myRandom.nextInt(50)+5;
-    		default:
-    			return "**Unknown**";
+    	if(wordLists.containsKey(label))
+    		return randomFrom(wordLists.get(label));
+    	return "**Unknown**";
     	}
-//        if (label.equals("country")) {
-//            return randomFrom(countryList);
-//        }
-//        if (label.equals("color")){
-//            return randomFrom(colorList);
-//        }
-//        if (label.equals("noun")){
-//            return randomFrom(nounList);
-//        }
-//        if (label.equals("name")){
-//            return randomFrom(nameList);
-//        }
-//        if (label.equals("adjective")){
-//            return randomFrom(adjectiveList);
-//        }
-//        if (label.equals("animal")){
-//            return randomFrom(animalList);
-//        }
-//        if (label.equals("timeframe")){
-//            return randomFrom(timeList);
-//        }
-//        if (label.equals("verb")){
-//            return randomFrom(verbList);
-//        }
-//        if (label.equals("fruit")){
-//            return randomFrom(fruitList);
-//        }
-//        if (label.equals("number")){
-//            return ""+myRandom.nextInt(50)+5;
-//        }
-//        return "**UNKNOWN**";
-    }	
-	
+
     // Process a placeholder in the template
     private String processWord(String w){
         int first = w.indexOf("<");
@@ -216,8 +156,8 @@ public class Game {
         
         while(alreadyUsed.contains(sub)){
             sub = getSubstitute(w.substring(first+1,last));
-            alreadyUsed.add(sub);
         }
+        alreadyUsed.add(sub);
         return prefix+sub+suffix;
     }
     
@@ -226,11 +166,11 @@ public class Game {
 		String sent = "";
 		File f = null;
 		if(diff == 1)
-			f = new File("src/data/templateEasy.txt");
+			f = new File(path + "/data/templateEasy.txt");
 		else if(diff == 2)
-			f = new File("src/data/templateMedium.txt");
+			f = new File(path + "/data/templateMedium.txt");
 		else if(diff == 3)
-			f = new File("src/data/templateHard.txt");
+			f = new File(path + "/data/templateHard.txt");
 		Scanner read = null;
 		try {
 			read = new Scanner(f);
@@ -260,7 +200,7 @@ public class Game {
 		window.getContentPane().setBackground(new Color(75, 75, 75));
 		window.setLayout(new BorderLayout());
 		
-		ImageIcon icon = new ImageIcon("src/image/icon.png");
+		ImageIcon icon = new ImageIcon(path + "/image/icon.png");
 		window.setIconImage(icon.getImage());
 		
 		JPanel top = new JPanel();
@@ -311,13 +251,22 @@ public class Game {
 		difficulty.setFont(fontL);
 		leftTop.add(difficulty, BorderLayout.CENTER);
 		
-		JPanel leftCenter = new JPanel(new FlowLayout(FlowLayout.LEADING, 24, 30));
+		JPanel leftCenter = new JPanel(new FlowLayout(FlowLayout.LEADING, 24, 25));
 		leftCenter.setOpaque(false);
 		leftCenter.setPreferredSize(new Dimension(100, 10));
 		leftBar.add(leftCenter, BorderLayout.CENTER);
-		JButton button1 = new JButton("Easy");
+		JButton button1 = new JButton("Easy");	
 		JButton button2 = new JButton("Medium");
 		JButton button3 = new JButton("Hard");
+		JLabel eInfo = new JLabel("One sentence");
+		JLabel mInfo = new JLabel("Two sentences");
+		JLabel hInfo = new JLabel("Three sentences");
+		eInfo.setFont(fontS);
+		mInfo.setFont(fontS);
+		hInfo.setFont(fontS);
+		eInfo.setForeground(Color.WHITE);
+		mInfo.setForeground(Color.WHITE);
+		hInfo.setForeground(Color.WHITE);
 		button1.setFont(fontM);
 		button2.setFont(fontM);
 		button3.setFont(fontM);
@@ -336,9 +285,21 @@ public class Game {
 		button1.setBorder(BorderFactory.createRaisedBevelBorder());
 		button2.setBorder(BorderFactory.createRaisedBevelBorder());
 		button3.setBorder(BorderFactory.createRaisedBevelBorder());
-		leftCenter.add(button1);
-		leftCenter.add(button2);
-		leftCenter.add(button3);
+		JPanel easyP = new JPanel(new GridLayout(0, 1));
+		JPanel mediumP = new JPanel(new GridLayout(0, 1));
+		JPanel hardP = new JPanel(new GridLayout(0, 1));
+		easyP.setOpaque(false);
+		mediumP.setOpaque(false);
+		hardP.setOpaque(false);
+		easyP.add(button1);
+		easyP.add(eInfo);
+		mediumP.add(button2);
+		mediumP.add(mInfo);
+		hardP.add(button3);
+		hardP.add(hInfo);
+		leftCenter.add(easyP);
+		leftCenter.add(mediumP);
+		leftCenter.add(hardP);
 		
 		JPanel leftBottom = new JPanel(new FlowLayout(FlowLayout.LEADING, 10, 10));
 		leftBottom.setPreferredSize(new Dimension(100, 100));
@@ -365,6 +326,12 @@ public class Game {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				currInfo.setText(d + "Easy");
+				button1.setBorder(BorderFactory.createLoweredBevelBorder());
+				button2.setBorder(BorderFactory.createRaisedBevelBorder());
+				button3.setBorder(BorderFactory.createRaisedBevelBorder());
+				button1.setEnabled(false);
+				button2.setEnabled(true);
+				button3.setEnabled(true);
 				diff = 1;
 			}
 		});
@@ -373,6 +340,12 @@ public class Game {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				currInfo.setText(d + "Medium");
+				button1.setBorder(BorderFactory.createRaisedBevelBorder());
+				button2.setBorder(BorderFactory.createLoweredBevelBorder());
+				button3.setBorder(BorderFactory.createRaisedBevelBorder());
+				button1.setEnabled(true);
+				button2.setEnabled(false);
+				button3.setEnabled(true);
 				diff = 2;
 			}
 		});
@@ -380,7 +353,13 @@ public class Game {
 		button3.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				currInfo.setText(d + "Difficult");
+				currInfo.setText(d + "Hard");
+				button1.setBorder(BorderFactory.createRaisedBevelBorder());
+				button2.setBorder(BorderFactory.createRaisedBevelBorder());
+				button3.setBorder(BorderFactory.createLoweredBevelBorder());
+				button1.setEnabled(true);
+				button2.setEnabled(true);
+				button3.setEnabled(false);
 				diff = 3;
 			}
 		});
@@ -390,16 +369,15 @@ public class Game {
 		bottomInfo.setFont(fontL);
 		bottomInfo.setForeground(Color.WHITE);
 		bottomInfo.setHorizontalAlignment(JLabel.CENTER);
-		bottomInfo.setVerticalAlignment(JLabel.BOTTOM);
-		bottom.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-		bottom.add(bottomInfo, BorderLayout.CENTER);
+		bottomInfo.setVerticalAlignment(JLabel.CENTER);
+		// bottom.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 		
 		button4.addActionListener(new ActionListener() {
 			int index = 3;
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(diff == 0) {
-					bottomInfo.setText("Select Difficulty First");
+					bottomInfo.setText("Select Difficulty");
 				}
 				else {
 					button4.setEnabled(false);
@@ -429,6 +407,7 @@ public class Game {
 		sentence.setBackground(new Color(100, 100, 100));
 		sentence.setFont(fontM);
 		sentence.setForeground(Color.WHITE);
+		sentence.setFocusable(false);
 		sentence.setLineWrap(true);
 		sentence.setEditable(false);
 		sentence.setOpaque(true);
@@ -502,6 +481,118 @@ public class Game {
 		accuA.setHorizontalAlignment(JLabel.CENTER);
 		accuS.add(accuA);
 		
+		JPanel rightBottom = new JPanel(new GridLayout(0, 1, 12, 24));
+		rightBottom.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
+		rightBottom.setPreferredSize(new Dimension(10, 240));
+		rightBottom.setOpaque(false);
+		rightBar.add(rightBottom, BorderLayout.SOUTH);
+		JLabel bestT = new JLabel("Best Timings:");
+		bestT.setFont(new Font("MV Boli", Font.PLAIN, 24));
+		rightBottom.add(bestT, BorderLayout.NORTH);
+		
+		JPanel easyT = new JPanel(new GridLayout(0, 1, 0, 0));
+		JPanel mediumT = new JPanel(new GridLayout(0, 1, 0, 8));
+		JPanel hardT = new JPanel(new GridLayout(0, 1, 0, 8));
+		
+		easyT.setOpaque(false);
+		mediumT.setOpaque(false);
+		hardT.setOpaque(false);
+		
+		JLabel label1 = new JLabel("Easy");
+		label1.setFont(fontM);
+		label1.setForeground(Color.WHITE);
+		JLabel eMin = new JLabel("--/--");
+		eMin.setFont(fontM);
+		eMin.setForeground(Color.WHITE);
+		JLabel label2 = new JLabel("Medium");
+		label2.setFont(fontM);
+		label2.setForeground(Color.WHITE);
+		JLabel mMin = new JLabel("--/--");
+		mMin.setFont(fontM);
+		mMin.setForeground(Color.WHITE);
+		JLabel label3 = new JLabel("Hard");
+		label3.setFont(fontM);
+		label3.setForeground(Color.WHITE);
+		JLabel hMin = new JLabel("--/--");
+		hMin.setFont(fontM);
+		hMin.setForeground(Color.WHITE);
+		easyT.add(label1);
+		easyT.add(eMin);
+		mediumT.add(label2);
+		mediumT.add(mMin);
+		hardT.add(label3);
+		hardT.add(hMin);
+		
+		rightBottom.add(easyT);
+		rightBottom.add(mediumT);
+		rightBottom.add(hardT);
+		
+		bottom.setLayout(new BorderLayout());
+		JPanel bottomLeft = new JPanel();
+		JPanel bottomRight = new JPanel();
+		JPanel bottomCenter = new JPanel();
+		bottomLeft.setOpaque(false);
+		bottomLeft.setPreferredSize(new Dimension(260, 10));
+		bottomLeft.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+		bottomLeft.setLayout(new GridLayout(0, 1));
+		bottomRight.setOpaque(false);
+		bottomRight.setPreferredSize(new Dimension(260, 10));
+		bottomRight.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+		bottomRight.setLayout(new GridLayout(0, 1));
+		bottomCenter.setOpaque(false);
+		bottomCenter.setPreferredSize(new Dimension(10, 10));
+		bottomCenter.setBorder(BorderFactory.createLineBorder(new Color(80, 80, 80), 5));
+		bottomCenter.setLayout(new GridLayout(1, 0, 40, 15));
+
+		bottom.add(bottomLeft, BorderLayout.WEST);
+		bottom.add(bottomCenter, BorderLayout.CENTER);
+		bottom.add(bottomRight, BorderLayout.EAST);
+		bottomLeft.add(bottomInfo, BorderLayout.CENTER);
+		
+		JLabel madeBy = new JLabel();
+		madeBy.setText("Made by Ansh Kushwaha");
+		madeBy.setOpaque(false);
+		madeBy.setFont(fontM);
+		madeBy.setForeground(new Color(210, 210, 210));
+		madeBy.setHorizontalAlignment(JLabel.CENTER);
+		madeBy.setVerticalAlignment(JLabel.CENTER);
+		bottomRight.add(madeBy, BorderLayout.CENTER);
+		
+		JPanel resP = new JPanel();
+		resP.setOpaque(false);
+		JPanel clrP = new JPanel();
+		clrP.setOpaque(false);
+		JButton reset = new JButton();
+		JButton clear = new JButton();
+		JLabel resI = new JLabel();
+		resI.setText("Reset game to start new attempt.");
+		resI.setFont(fontS);
+		resI.setForeground(Color.WHITE);
+		reset.setText("Reset");
+		reset.setFont(fontM);
+		reset.setFocusable(false);
+		reset.setForeground(Color.WHITE);
+		reset.setBackground(new Color(40, 40 , 40));
+		reset.setPreferredSize(new Dimension(160, 40));
+		reset.setBorder(BorderFactory.createEtchedBorder());
+		resP.add(reset, BorderLayout.CENTER);
+		resP.add(resI);
+		JLabel clrI = new JLabel();
+		clrI.setText("Clear all data! (To restart the game)");
+		clrI.setFont(fontS);
+		clrI.setForeground(Color.WHITE);
+		clear.setText("Clear!");
+		clear.setFont(fontM);
+		clear.setFocusable(false);
+		clear.setForeground(Color.WHITE);
+		clear.setBackground(new Color(40, 40 , 40));
+		clear.setPreferredSize(new Dimension(160, 40));
+		clear.setBorder(BorderFactory.createEtchedBorder());
+		clrP.add(clear, BorderLayout.CENTER);
+		clrP.add(clrI);
+		bottomCenter.add(resP, BorderLayout.WEST);
+		bottomCenter.add(clrP, BorderLayout.EAST);
+		
 		window.setVisible(true);
 	}
 	
@@ -514,14 +605,16 @@ public class Game {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			timeE = System.nanoTime();
+			bottomInfo.setText("Done");
 			displayTime();
 			displayAccuracy();
 			input.setEditable(false);
+			input.setFocusable(false);
 		}
 	};
 	
 	private void detectE() {
-		bottomInfo.setText("GO");
+		bottomInfo.setText("Go");
 		timeS = System.nanoTime();
 		KeyStroke keyStroke = KeyStroke.getKeyStroke("ENTER");
         Object actionKey = input.getInputMap(JTextArea.WHEN_FOCUSED).get(keyStroke);
